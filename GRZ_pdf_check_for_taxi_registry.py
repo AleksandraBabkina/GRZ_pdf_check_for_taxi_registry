@@ -6,7 +6,6 @@ from openpyxl.styles import PatternFill
 import time
 
 # Specify the path to the folder with PDF and Excel files
-# folder_path = r'Licenses\Sasha'
 folder_path = os.path.dirname(__file__)
 
 # Get a list of all PDF files in the folder
@@ -23,21 +22,30 @@ if not excel_files:
     print("No Excel files found in the folder.")
     exit()
 
-# Open the first found Excel file using pandas
-excel_file = excel_files[0]
-df = pd.read_excel(excel_file)
+# Process each Excel file found
+for excel_file in excel_files:
+    # Open the Excel file using pandas
+    df = pd.read_excel(excel_file)
 
-# Select the GRZ column and convert it to a list
-grz_values = df['GRZ'].tolist()
+    # Check if the 'GRZ' column exists in the Excel file
+    if 'GRZ' not in df.columns:
+        print(f"Warning: 'GRZ' column not found in {excel_file}. Skipping this file.")
+        continue
 
-# Compare the GRZ values with the PDF file names
-missing_values = [value for value in grz_values if value not in pdf_names]
+    # Select the 'GRZ' column and convert it to a list, excluding empty values
+    grz_values = df['GRZ'].dropna().tolist()
 
-if missing_values:
-    print("GRZ values that are missing from the PDF file names:\n")
-    for value in missing_values:
-        print(value)
-else:
-    print("All GRZ values are present in the PDF file names. Everything is OK.")
+    # Compare the 'GRZ' values with the PDF file names
+    missing_values = [value for value in grz_values if value not in pdf_names]
 
+    if missing_values:
+        # If there are missing values, print them
+        print(f"GRZ values that are missing from the PDF file names in {excel_file}:\n")
+        for value in missing_values:
+            print(value)
+    else:
+        # If all GRZ values are found, print a success message
+        print(f"All GRZ values are present in the PDF file names in {excel_file}. Everything is OK.")
+
+# Wait for 5 minutes (300 seconds) before the script finishes
 time.sleep(300)
